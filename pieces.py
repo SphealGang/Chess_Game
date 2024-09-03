@@ -19,6 +19,11 @@ pieces = [
       'color':'yellow',
       'possible_moves':[]
       },
+      {'name':'w_rook2',
+      'position': pygame.Vector2(8, 8),
+      'color':'yellow',
+      'possible_moves':[]
+      },
       {'name':'b_pawn1',
      'position':pygame.Vector2(1, 2),
      'color':'yellow',
