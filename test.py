@@ -34,7 +34,7 @@ class PieceManager():
 
     def create_possible_moves(self):
         for x in self.pieces:
-            x.update({'possible_moves': available_moves(x['position'],self.pieces)})
+            x.update({'possible_moves': available_moves(x['name'],x['position'],self.pieces)})
             x.update({'possible_move_square':available_moves_rect(x['possible_moves'])})
 
     def draw_pieces(self):
@@ -47,24 +47,41 @@ class PieceManager():
             name = font.render(name, True, 'black')
             name_rect = name.get_rect(center=rect.center)
             screen.blit(name, name_rect)
-            available_moves(x['position'],self.pieces)
+            available_moves(x['name'],x['position'],self.pieces)
 
 def select_piece():
     global turn_manager
+    global last_move
+    global selected_piece
+
     mouse_pos = pygame.mouse.get_pos()
     if turn_manager == 1:
         for x in pieces_init.pieces:
             if x['rect'].collidepoint(mouse_pos):
                 if pygame.mouse.get_pressed()[0] == 1:
-                    print(x['possible_moves'])
-                    if len(x['possible_moves']) > 0:
-                        display_possible_moves(x,screen)
-                        turn_manager = 3
-                        global selected_piece
-                        selected_piece = x
-                        break
-                    else:
-                        turn_manager = 1
+                    if x['name'][0] == 'w':    
+                        if len(x['possible_moves']) > 0:
+                            display_possible_moves(x,screen)
+                            turn_manager = 3
+                            last_move = 'white'
+                            selected_piece = x
+                            break
+                        else:
+                            turn_manager = 1
+
+    elif turn_manager == 2:
+        for x in pieces_init.pieces:
+            if x['rect'].collidepoint(mouse_pos):
+                if pygame.mouse.get_pressed()[0] == 1:
+                    if x['name'][0] == 'b':    
+                        if len(x['possible_moves']) > 0:
+                            display_possible_moves(x,screen)
+                            turn_manager = 3
+                            last_move = 'black'
+                            selected_piece = x
+                            break
+                        else:
+                            turn_manager = 2
 
     elif turn_manager == 3:
             for y in selected_piece['possible_move_square']:
@@ -72,7 +89,10 @@ def select_piece():
                     if pygame.mouse.get_pressed()[0] == 1:
                         selected_piece.update({'position':pygame.Vector2(y.x/100,y.y/100)})
                         main_game()
-                        turn_manager = 1
+                        if last_move == 'white':
+                            turn_manager = 2
+                        else:
+                            turn_manager = 1
                         break
 
 def main_game():
@@ -82,6 +102,8 @@ def main_game():
     board_init.create_board()
 
 turn_manager = 1
+last_move = ''
+
 screen = pygame.display.set_mode((1500,1000))
 clock = pygame.time.Clock()
 square_size = 100
