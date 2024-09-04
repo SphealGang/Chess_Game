@@ -10,42 +10,29 @@ def update_piece(rect,vector):
 def available_moves(piece_name,current_position,piece_dict):
     legal_squares = []
  
-    if 'w_pawn' in piece_name:
-        if current_position.y == 7:
-            legal_squares.append(current_position - pygame.Vector2(0,1))
-            legal_squares.append(current_position - pygame.Vector2(0,2))      
+    if 'pawn' in piece_name:
+        direction = -pygame.Vector2(0,1) if piece_name[0] == 'w' else pygame.Vector2(0,1)
+        team = piece_name[0]
+        starting_pos = 7 if piece_name[0] == 'w' else 2
+
+        if current_position.y == starting_pos:
+            legal_squares.append(current_position + direction)
+            legal_squares.append(current_position + 2 * direction)      
         else:
-            legal_squares.append(current_position - pygame.Vector2(0,1))
+            legal_squares.append(current_position + direction)
 
         for y in legal_squares:
             for piece in piece_dict:
                 if y == piece['position']:
-                    legal_squares = []
+                    if legal_squares == [] or y == legal_squares[0]:
+                        legal_squares = []
+                    else:
+                        legal_squares.pop()
 
-        for square in piece_dict:
-            if (current_position - pygame.Vector2(0,1) + pygame.Vector2(1,0)) == square['position']and square['name'][0] == 'b':
-                legal_squares.append(current_position - pygame.Vector2(0,1) + pygame.Vector2(1,0))
-            elif (current_position - pygame.Vector2(0,1) - pygame.Vector2(1,0)) == square['position'] and square['name'][0] == 'b':
-                legal_squares.append(current_position - pygame.Vector2(0,1) - pygame.Vector2(1,0))
-        
-    elif 'b_pawn' in piece_name:
-        if current_position.y == 2:
-            legal_squares.append(current_position + pygame.Vector2(0,1))
-            legal_squares.append(current_position + pygame.Vector2(0,2))      
-        else:
-            legal_squares.append(current_position + pygame.Vector2(0,1))
-
-        for y in legal_squares:
-            for piece in piece_dict:
-                if y == piece['position']:
-                    legal_squares = []
-
-        for square in piece_dict:
-            if (current_position + pygame.Vector2(0,1) + pygame.Vector2(1,0)) == square['position']and square['name'][0] == 'w':
-                legal_squares.append(current_position + pygame.Vector2(0,1) + pygame.Vector2(1,0))
-            elif (current_position + pygame.Vector2(0,1) - pygame.Vector2(1,0)) == square['position'] and square['name'][0] == 'w':
-                legal_squares.append(current_position + pygame.Vector2(0,1) - pygame.Vector2(1,0))
-
+        for diagonal in [-1,1]:
+            for square in piece_dict:
+                if (current_position + direction + pygame.Vector2(diagonal,0)) == square['position']and square['name'][0] != team:
+                    legal_squares.append(current_position + direction + pygame.Vector2(diagonal,0))
 
     return legal_squares
 
