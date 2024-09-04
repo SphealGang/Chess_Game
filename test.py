@@ -51,7 +51,6 @@ class PieceManager():
 
 def select_piece():
     global turn_manager
-    global last_move
     global selected_piece
 
     mouse_pos = pygame.mouse.get_pos()
@@ -63,7 +62,6 @@ def select_piece():
                         if len(x['possible_moves']) > 0:
                             display_possible_moves(x,screen)
                             turn_manager = 3
-                            last_move = 'white'
                             selected_piece = x
                             break
                         else:
@@ -76,20 +74,27 @@ def select_piece():
                     if x['name'][0] == 'b':    
                         if len(x['possible_moves']) > 0:
                             display_possible_moves(x,screen)
-                            turn_manager = 3
-                            last_move = 'black'
+                            turn_manager = 4
                             selected_piece = x
                             break
                         else:
                             turn_manager = 2
 
-    elif turn_manager == 3:
+    elif turn_manager == 3 or turn_manager == 4:
             for y in selected_piece['possible_move_square']:
                 if y.collidepoint(mouse_pos):
                     if pygame.mouse.get_pressed()[0] == 1:
+                        
                         selected_piece.update({'position':pygame.Vector2(y.x/100,y.y/100)})
+
+                        for taken_piece in pieces_init.pieces:
+                            if taken_piece['position'] == selected_piece['position'] and taken_piece['name'] != selected_piece['name']:
+                                pieces_init.pieces.remove(taken_piece)
+                            else:
+                                pass
+
                         main_game()
-                        if last_move == 'white':
+                        if turn_manager == 3:
                             turn_manager = 2
                         else:
                             turn_manager = 1
@@ -102,7 +107,6 @@ def main_game():
     board_init.create_board()
 
 turn_manager = 1
-last_move = ''
 
 screen = pygame.display.set_mode((1500,1000))
 clock = pygame.time.Clock()
