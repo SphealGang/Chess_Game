@@ -9,7 +9,7 @@ pieces = [
      },
 
      {'name':'w_pawn2',
-      'position': pygame.Vector2(2, 4),
+      'position': pygame.Vector2(7, 4),
       'color':'yellow',
       'possible_moves':[]
       },
@@ -39,6 +39,12 @@ pieces = [
       {'name':'b_pawn3',
       'position': pygame.Vector2(6, 2),
       'color':'red',
+      'possible_moves':[]
+      },
+
+      {'name':'w_bishop',
+      'position': pygame.Vector2(3, 8),
+      'color':'yellow',
       'possible_moves':[]
       }
     ]
