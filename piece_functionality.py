@@ -64,7 +64,7 @@ def available_moves(piece_name,current_position,piece_dict):
             for i in range(int(current_position.y-1),-1,-1):
                 if any(pygame.Vector2(current_position.x,i) == x['position'] for x in   piece_dict):
                     if x['name'][0] != team:
-                        legal_squares.append(pygame.Vector2(i,current_position.y))
+                        legal_squares.append(pygame.Vector2(current_position.x,i))
                         break
                     else:
                         break
@@ -73,21 +73,60 @@ def available_moves(piece_name,current_position,piece_dict):
             for i in range(int(current_position.y+1),9):
                 if any(pygame.Vector2(current_position.x,i) == x['position'] for x in   piece_dict):
                     if x['name'][0] != team:
-                        legal_squares.append(pygame.Vector2(i,current_position.y))
+                        legal_squares.append(pygame.Vector2(current_position.x,i))
                         break
                     else:
                         break
                 legal_squares.append(pygame.Vector2(current_position.x,i))
 
         for x in legal_squares:
-            if x.x > 9 or x.x < 1 or x.y > 9 or x.y < 1:
+            if x.x >= 9 or x.x < 1 or x.y >= 9 or x.y < 1:
                 legal_squares.remove(x)
+
+    elif 'bishop' in piece_name:
+        for x in piece_dict:
+            team = piece_name[0]
+
+            for y in range(1,8):
+                square = pygame.Vector2(current_position.x + y,current_position.y - y)
+                if square.x > 8 or square.y < 1:
+                    break
+                elif next(square == x['position'] for x in piece_dict):
+                    if x['name'][0] != team:
+                        legal_squares.append(square)
+                        break
+                    elif x['name'][0] == team:
+                        break
+                else:
+                    legal_squares.append(square)
+            
+            for y in range(1,8):
+                square = pygame.Vector2(current_position.x + y,current_position.y + y)
+                if square.x > 8 or square.y > 8:
+                    break
+                else:
+                    legal_squares.append(square)
+
+            for y in range(1,8):
+                square = pygame.Vector2(current_position.x - y,current_position.y - y)
+                if square.x < 1 or square.y < 1:
+                    break
+                else:
+                    legal_squares.append(square)
+
+            for y in range(1,8):
+                square = pygame.Vector2(current_position.x - y,current_position.y + y)
+                if square.x < 1 or square.y > 8:
+                    break
+                else:
+                    legal_squares.append(square)
 
 
     for x in legal_squares:
         if current_position in legal_squares:
             legal_squares.remove(current_position)
-
+        if x.x >= 9 or x.x < 1 or x.y >= 9 or x.y < 1:
+            legal_squares.remove(x)
 
     return legal_squares
 
