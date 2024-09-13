@@ -9,7 +9,9 @@ def update_piece(rect,vector):
 
 def available_moves(piece_name,current_position,piece_dict):
     legal_squares = []
- 
+    directions = []
+    line = False
+
     if 'pawn' in piece_name:
         direction = -pygame.Vector2(0,1) if piece_name[0] == 'w' else pygame.Vector2(0,1)
         team = piece_name[0]
@@ -39,94 +41,95 @@ def available_moves(piece_name,current_position,piece_dict):
                     legal_squares.append(current_position + direction + pygame.Vector2(diagonal,0))
 
     elif 'rook' in piece_name:
-
-        for x in piece_dict:
-            team = piece_name[0]
-
-            for i in range(int(current_position.x-1),-1,-1):
-                if any(pygame.Vector2(i,current_position.y) == x['position'] for x in piece_dict):
-                    if x['name'][0] != team:
-                        legal_squares.append(pygame.Vector2(i,current_position.y))
-                        break
-                    else:
-                        break
-                legal_squares.append(pygame.Vector2(i,current_position.y))
-            
-            for i in range(int(current_position.x)+1,9):
-                if any(pygame.Vector2(i,current_position.y) == x['position'] for x in   piece_dict):
-                    if x['name'][0] != team:
-                        legal_squares.append(pygame.Vector2(i,current_position.y))
-                        break
-                    else:
-                        break
-                legal_squares.append(pygame.Vector2(i,current_position.y))
-    
-            for i in range(int(current_position.y-1),-1,-1):
-                if any(pygame.Vector2(current_position.x,i) == x['position'] for x in   piece_dict):
-                    if x['name'][0] != team:
-                        legal_squares.append(pygame.Vector2(current_position.x,i))
-                        break
-                    else:
-                        break
-                legal_squares.append(pygame.Vector2(current_position.x,i))
-    
-            for i in range(int(current_position.y+1),9):
-                if any(pygame.Vector2(current_position.x,i) == x['position'] for x in   piece_dict):
-                    if x['name'][0] != team:
-                        legal_squares.append(pygame.Vector2(current_position.x,i))
-                        break
-                    else:
-                        break
-                legal_squares.append(pygame.Vector2(current_position.x,i))
-
-        for x in legal_squares:
-            if x.x >= 9 or x.x < 1 or x.y >= 9 or x.y < 1:
-                legal_squares.remove(x)
+        directions = [(1,0),(0,1),(-1,0),(0,-1)]
+        line = True
 
     elif 'bishop' in piece_name:
-        for x in piece_dict:
-            team = piece_name[0]
+        directions = [(+1,-1),(+1,+1),(-1,+1),(-1,-1)]
+        line = True
 
-            for y in range(1,8):
-                square = pygame.Vector2(current_position.x + y,current_position.y - y)
-                if square.x > 8 or square.y < 1:
-                    break
-                elif next(square == x['position'] for x in piece_dict):
+    elif 'queen' in piece_name:
+        directions = [(+1,-1),(+1,+1),(-1,+1),(-1,-1),(1,0),(0,1),(-1,0),(0,-1)]
+        line = True
+
+    elif 'horse' in piece_name:
+        directions = [(+1,+2),(-1,+2),(+2,+1),(+2,-1),(-2,+1),(-2,-1),(+1,-2),(-1,-2),]
+
+        for dx,dy in directions:
+            square = pygame.Vector2(current_position.x + dx,current_position.y + dy)
+            occupied = False
+
+            for x in piece_dict:
+                team = piece_name[0]
+                if square == x['position']:
+                    occupied = True
+                    if x['name'][0] != team:
+                        legal_squares.append(square)   
+
+            if occupied:
+                pass
+            
+            else:
+                legal_squares.append(square)
+
+    elif 'king' in piece_name:
+        directions = [(0,+1),(-1,+1),(+1,+1),(+1,0),(-1,0),(0,-1),(+1,-1),(-1,-1)]
+        for dx,dy in directions:
+            square = pygame.Vector2(current_position.x + dx,current_position.y + dy)
+            occupied = False
+
+            for x in piece_dict:
+                team = piece_name[0]
+                if square == x['position']:
+                    occupied = True
                     if x['name'][0] != team:
                         legal_squares.append(square)
-                        break
-                    elif x['name'][0] == team:
-                        break
-                else:
-                    legal_squares.append(square)
             
-            for y in range(1,8):
-                square = pygame.Vector2(current_position.x + y,current_position.y + y)
-                if square.x > 8 or square.y > 8:
-                    break
-                else:
-                    legal_squares.append(square)
+            for y in x['possible_moves']:
+                if y == square:
+                    occupied = True
 
-            for y in range(1,8):
-                square = pygame.Vector2(current_position.x - y,current_position.y - y)
-                if square.x < 1 or square.y < 1:
-                    break
-                else:
-                    legal_squares.append(square)
+            if occupied:
+                pass
+            
+            else:
+                legal_squares.append(square)
 
-            for y in range(1,8):
-                square = pygame.Vector2(current_position.x - y,current_position.y + y)
-                if square.x < 1 or square.y > 8:
-                    break
-                else:
-                    legal_squares.append(square)
+                   
 
+    if line:        
+        for x in piece_dict:
+            team = piece_name[0]
+            
+            for dx,dy in directions:
+                for y in range(1,8):
+                    square = pygame.Vector2(current_position.x + y * dx,current_position.y + y * dy)
+                    
+                    if square.x > 8 or square.y < 1 or square.x < 1 or square.y > 8:
+                        break
 
+                    occupied = False
+
+                    for x in piece_dict:
+                        team = piece_name[0]
+                        if square == x['position']:
+                            occupied = True
+                            if x['name'][0] != team:
+                                legal_squares.append(square)
+                            break    
+
+                    if occupied:
+                        break
+
+                    legal_squares.append(square)  
+            
     for x in legal_squares:
         if current_position in legal_squares:
             legal_squares.remove(current_position)
         if x.x >= 9 or x.x < 1 or x.y >= 9 or x.y < 1:
             legal_squares.remove(x)
+
+    
 
     return legal_squares
 
