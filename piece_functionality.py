@@ -1,3 +1,4 @@
+
 import pygame
 from pieces import *
 
@@ -7,10 +8,11 @@ def update_piece(rect,vector):
     rect.x = vector.x * square_size + 20
     rect.y = vector.y * square_size + 20
 
-def available_moves(piece_name,current_position,piece_dict,first_move):
+def available_moves(piece_name,current_position,piece_dict,first_move,turn_manager):
     legal_squares = []
     directions = []
     line = False
+    turn = 'b' if turn_manager == 1 else 'w'
 
     if 'pawn' in piece_name:
         direction = -pygame.Vector2(0,1) if piece_name[0] == 'w' else pygame.Vector2(0,1)
@@ -93,6 +95,10 @@ def available_moves(piece_name,current_position,piece_dict,first_move):
             occupied = False
 
             for x in piece_dict:
+                if x['name'] == turn:
+                    for y in x['possible_moves']:
+                        if y in legal_squares:
+                            illegal_squares.append(y)
                 if square == x['position']:
                     occupied = True
                     if x['name'][0] != team:
@@ -101,6 +107,7 @@ def available_moves(piece_name,current_position,piece_dict,first_move):
                     for z in x['possible_moves']:
                         if x['position'].x != z.x:
                             illegal_squares.append(x)  
+                            
                 elif x['name'][0] != team:
                     for z in x['possible_moves']:
                         illegal_squares.append(z)
@@ -144,7 +151,6 @@ def available_moves(piece_name,current_position,piece_dict,first_move):
 
     if line:        
         for x in piece_dict:
-            team = piece_name[0]
             
             for dx,dy in directions:
                 for y in range(1,8):
@@ -158,7 +164,10 @@ def available_moves(piece_name,current_position,piece_dict,first_move):
                     for x in piece_dict:
                         team = piece_name[0]
                         if square == x['position']:
-                            occupied = True
+                            if turn == x['name'][0]:
+                                legal_squares.append(square)
+                            
+                            occupied= True
                             if x['name'][0] != team:
                                 legal_squares.append(square)
                             break    
@@ -174,7 +183,10 @@ def available_moves(piece_name,current_position,piece_dict,first_move):
         if x.x >= 9 or x.x < 1 or x.y >= 9 or x.y < 1:
             legal_squares.remove(x)
 
-    
+    for x in piece_dict:
+        if x['position'] in legal_squares and x['name'][0] != turn:
+            legal_squares.remove(x['position'])
+
     return legal_squares
 
 def castle_movement(king,rook,new_king_position,new_rook_position):
@@ -262,3 +274,7 @@ def is_check(selected_piece,piece_dict):
                 break
         
     enemy_king.update({'check':False})
+
+def empty_moves(piece_dict):
+    for x in piece_dict:
+        x.update({'possible_moves':[]})
