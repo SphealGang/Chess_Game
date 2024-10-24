@@ -54,6 +54,7 @@ def select_piece():
     global turn_manager
     global selected_piece
 
+
     mouse_pos = pygame.mouse.get_pos()
     if turn_manager == 1:
         for x in pieces_init.pieces:
@@ -88,6 +89,15 @@ def select_piece():
                         team = 'w' if turn_manager == 3 else 'b'
                         king = next((x for x in pieces_init.pieces if team + '_king' in x['name']))
 
+                        if 'king' in selected_piece['name']:
+                            if selected_piece['first_move'] == True:
+                                selected_square = pygame.Vector2(y.x/100,y.y/100)
+                                castle_squares = [pygame.Vector2(3,y.y/100),pygame.Vector2(7,y.y/100)]
+                                if selected_square in castle_squares:
+                                    if selected_square == castle_squares[0]:
+                                        castle_movement(selected_piece,rook = next((x for x in pieces_init.pieces if 'rook1' in x['name'] and selected_piece['name'][0] == x['name'][0]), None),new_king_position=castle_squares[0],new_rook_position=pygame.Vector2(1,0),piece_dict=pieces_init.pieces)
+                                    elif selected_square == castle_squares[1]:
+                                        castle_movement(selected_piece,rook = next((x for x in pieces_init.pieces if 'rook2' in x['name'] and selected_piece['name'][0] == x['name'][0]), None),new_king_position=castle_squares[1],new_rook_position=pygame.Vector2(-1,0),piece_dict=pieces_init.pieces)
 
                         if king['check'] == True:
                             if selected_piece['name'] != king['name']:
@@ -98,16 +108,6 @@ def select_piece():
                                     turn_manager = 1
                                 break
                         pass
-
-                        if 'king' in selected_piece['name']:
-                            if selected_piece['first_move'] == True:
-                                selected_square = pygame.Vector2(y.x/100,y.y/100)
-                                castle_squares = [pygame.Vector2(3,y.y/100),pygame.Vector2(7,y.y/100)]
-                                if selected_square in castle_squares:
-                                    if selected_square == castle_squares[0]:
-                                        castle_movement(selected_piece,rook = next((x for x in pieces_init.pieces if 'rook1' in x['name'] and selected_piece['name'][0] == x['name'][0]), None),new_king_position=castle_squares[0],new_rook_position=pygame.Vector2(1,0))
-                                    elif selected_square == castle_squares[1]:
-                                        castle_movement(selected_piece,rook = next((x for x in pieces_init.pieces if 'rook2' in x['name'] and selected_piece['name'][0] == x['name'][0]), None),new_king_position=castle_squares[1],new_rook_position=pygame.Vector2(-1,0))
 
                         previous_position = selected_piece['position']
                         new_position = pygame.Vector2(y.x/100,y.y/100)
@@ -130,7 +130,30 @@ def select_piece():
                             else:
                                 pass
 
-                        if self_check(pieces_init.pieces,selected_piece,taken_piece) == True:
+                        if 'king' not in selected_piece['name']:
+                            if self_check(pieces_init.pieces,selected_piece,taken_piece) == True:
+                                selected_piece.update({'position':previous_position})
+                                pieces_init.pieces += taken_piece_copy
+                                main_game()
+                                if turn_manager == 4:
+                                    turn_manager = 2
+                                else:
+                                    turn_manager = 1
+                                break
+                            else:
+                                pass  
+
+                        delete_ep_pawn(selected_piece,pieces_init.pieces)
+
+                        change_first_move(selected_piece)
+
+                        change_first_move_2_squares(selected_piece,previous_position,new_position)
+
+                        pieces_init.create_possible_moves()
+
+                        reset_check(selected_piece)
+
+                        if king['check'] == True:
                             selected_piece.update({'position':previous_position})
                             pieces_init.pieces += taken_piece_copy
                             main_game()
@@ -139,21 +162,14 @@ def select_piece():
                             else:
                                 turn_manager = 1
                             break
-                        else:
-                            pass  
+                        
 
-                        delete_ep_pawn(selected_piece,pieces_init.pieces)
-
-                        change_first_move(selected_piece)
-
-                        change_first_move_2_squares(selected_piece,previous_position,new_position)
-
-                        is_check(selected_piece,pieces_init.pieces)
-
-                        # if 'en_passant' in selected_piece.keys():
+                        # if 'check' in selected_piece.keys():
                         #     print("#########################")
                         #     print(selected_piece['name'])
-                        #     print(selected_piece['en_passant'])
+                        #     print(selected_piece['check'])
+
+                        is_check(turn_manager,pieces_init.pieces)
 
                         if turn_manager == 3:
                             turn_manager = 2
@@ -185,6 +201,7 @@ pieces_init = PieceManager(pieces)
 main_game()
 
 while True:
+    checkmate(pieces_init.pieces,turn_manager)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
