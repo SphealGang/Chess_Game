@@ -53,7 +53,8 @@ def select_piece():
     global selected_piece
     black_king = next(x for x in pieces_init.pieces if x['name'] == 'b_king')
     white_king = next(x for x in pieces_init.pieces if x['name'] == 'w_king')
-    defender = defenders(pieces_init.pieces,turn_manager)
+    defender = defenders(pieces_init.pieces,turn_manager) 
+    defender = defender if defender != None else []
 
     mouse_pos = pygame.mouse.get_pos()
     if turn_manager == 1:
@@ -156,8 +157,10 @@ def select_piece():
 
                         main_game()
 
-                        if enemy_king['position'] in selected_piece['possible_moves']:
+                        if any(enemy_king['position'] in x['possible_moves'] for x in pieces_init.pieces if x['name'][0] != enemy_king['name'][0]):
                             enemy_king.update({'check':True}) 
+
+                        pieces_init.create_possible_moves()
 
                         if 'pawn' in selected_piece['name']:
                             opposite_side = 1 if team == 'w' else 8
@@ -196,6 +199,9 @@ def select_piece():
             turn_manager = 2 if turn_manager == 5 else 1
 
         main_game()
+
+        is_check(turn_manager,pieces_init.pieces)
+        pieces_init.create_possible_moves()
         
 
         
@@ -212,8 +218,8 @@ def checkmate(piece_dict,turn_manager):
     king = next(x for x in piece_dict if team + '_king' in x['name'])
     attackers = get_attackers(piece_dict,king)
     defender_list = defenders(piece_dict,turn_manager)
-    black_win = pygame.image.load('black_win_screen.png')
-    white_win = pygame.image.load('white_win_screen.png')
+    black_win = pygame.image.load('black_wins.png')
+    white_win = pygame.image.load('white_wins.png')
 
     if attackers != []:
         if king['possible_moves'] == [] and defender_list == []:
@@ -225,7 +231,7 @@ def checkmate(piece_dict,turn_manager):
             screen.blit(winner_screen,(450,250))
             # pygame.display.flip()
 
-def smooth_movement(start_pos,end_pos,piece,step=50):
+def smooth_movement(start_pos,end_pos,piece,step=30):
     start_x = start_pos.x
     start_y = start_pos.y 
 
