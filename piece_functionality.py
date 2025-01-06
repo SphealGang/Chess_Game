@@ -1,4 +1,3 @@
-
 import pygame
 from pieces import *
 
@@ -57,9 +56,7 @@ def available_moves(piece_name,current_position,piece_dict,first_move,turn_manag
         
         for diagonal in [-1,1]:
             for x in piece_dict:
-                if (current_position + direction + pygame.Vector2(diagonal,0)) == x['position'] and x['name'][0] != team:
-                    legal_squares.append(current_position + direction + pygame.Vector2(diagonal,0))
-                elif current_turn == team:
+                if (current_position + direction + pygame.Vector2(diagonal,0)) == x['position'] and x['name'][0] != team or current_turn == team:
                     legal_squares.append(current_position + direction + pygame.Vector2(diagonal,0))
                  
     elif 'rook' in piece_name:
@@ -98,14 +95,18 @@ def available_moves(piece_name,current_position,piece_dict,first_move,turn_manag
                 legal_squares.append(square)
 
     elif 'king' in piece_name:
-        directions = [(0,+1),(-1,+1),(+1,+1),(+1,0),(-1,0),(0,-1),(+1,-1),(-1,-1)]
+        directions = [(0, +1), (-1, +1), (+1, +1), (+1, 0), (-1, 0), (0, -1), (+1, -1), (-1, -1)]
         illegal_squares = []
         team = piece_name[0]
         rook_name = team + '_rook'
 
+        opposing_king_position = next(x['position'] for x in piece_dict if 'king' in x['name'] and x['name'][0] != team)
+        opposing_king_adjacent_squares = [pygame.Vector2(opposing_king_position.x + dx, opposing_king_position.y + dy)for dx, dy in directions]
+        
+        illegal_squares.extend(opposing_king_adjacent_squares)
 
-        for dx,dy in directions:
-            square = pygame.Vector2(current_position.x + dx,current_position.y + dy)
+        for dx, dy in directions:
+            square = pygame.Vector2(current_position.x + dx, current_position.y + dy)
             occupied = False
 
             for x in piece_dict:
@@ -113,7 +114,7 @@ def available_moves(piece_name,current_position,piece_dict,first_move,turn_manag
                     for y in x['possible_moves']:
                         if y == square:
                             illegal_squares.append(y)
-                
+
                 elif square == x['position']:
                     occupied = True
                     if x['name'][0] != team:
@@ -129,9 +130,10 @@ def available_moves(piece_name,current_position,piece_dict,first_move,turn_manag
 
             if occupied:
                 pass
-            
+
             else:
-                legal_squares.append(square)
+                if square not in illegal_squares:
+                    legal_squares.append(square)
 
         if first_move == True:
             for x in piece_dict:
@@ -143,15 +145,18 @@ def available_moves(piece_name,current_position,piece_dict,first_move,turn_manag
                                 castle_square = (pygame.Vector2(i,current_position.y))
                                 if any(x['position'] == castle_square for x in piece_dict):
                                     break
-                                else:
-                                    legal_squares.append(pygame.Vector2(3,current_position.y))
+                            else:
+                                legal_squares.append(pygame.Vector2(3,current_position.y))
+                                
                         elif x['name'][-1] == '2':
                             for i in range(int(current_position.x)+1,int(rook_x)):
                                 castle_square = (pygame.Vector2(i,current_position.y))
                                 if any(x['position'] == castle_square for x in piece_dict):
                                     break
-                                else:
-                                    legal_squares.append(pygame.Vector2(7,current_position.y))
+                            else:
+                                legal_squares.append(pygame.Vector2(7,current_position.y))
+
+        illegal_squares.extend([x['possible_moves'] for x in piece_dict if x['name'][0] != team])
 
         legal_squares = [x for x in legal_squares if x not in illegal_squares]
 
@@ -254,7 +259,6 @@ def missed_en_passant(selected_piece,piece_dict):
         if selected_piece['name'][0] == epp['name'][0]:
             epp.update({'en_passant':False})
 
-
 def delete_ep_pawn(selected_piece,piece_dict):
     en_passant_pawn = next((x for x in piece_dict if 'pawn' in x['name'] and x['en_passant'] == True),None)
     team = selected_piece['name'][0]
@@ -305,12 +309,12 @@ def get_attackers(piece_dict,king):
     attacker = []
 
     for x in piece_dict:
-        if king['position'] in x['possible_moves']:
+        if king['position'] in x['possible_moves'] and x['name'][0] != king['name'][0]:
             attacker.append(x)
 
     return attacker
 
-def checkmate(piece_dict,turn_manager):
+def defenders(piece_dict,turn_manager):
     turn = {
         1 : 'w',
         2 : 'b',
@@ -320,19 +324,20 @@ def checkmate(piece_dict,turn_manager):
         6 : 'b'
     }
     team = turn[turn_manager]
-    can_be_defended = True
     king = next(x for x in piece_dict if team + '_king' in x['name'])
     king_team = [x for x in piece_dict if team in x['name']]
     attackers = get_attackers(piece_dict,king)
     attacker_squares = []
+    defenders = []
+
+    if len(attackers) >= 2:
+        return defenders
 
     if attackers != []: 
-        if len(attackers) >= 2:
-            can_be_defended == False
-
         for x in attackers:
             attacker_pos = x['position']
-    
+            attacker_name = x['name']
+
             attack_dir_x = attacker_pos.x - king['position'].x
             attack_dir_y = attacker_pos.y - king['position'].y
 
@@ -341,26 +346,26 @@ def checkmate(piece_dict,turn_manager):
 
         
         for n in range (8):
+            if 'horse' in attacker_name:
+                attacker_squares.append(pygame.Vector2(attacker_pos))
+                break
+
             direction = pygame.Vector2(step_x * n, step_y * n)
             square = king['position'] + direction
             if square == attacker_pos:
+                attacker_squares.append(square)
                 break
-            elif square == king['position']:
-                pass
             else:
                 attacker_squares.append(square)
 
-        # print(attacker_squares)
-
-        can_be_defended = False
         for x in attacker_squares:
             for y in king_team:
                 if x in y['possible_moves']:
-                    can_be_defended = True
-                    break
+                    defenders.append(y)
+                
+        for x in defenders:
+            if 'king' not in x['name']: 
+                x.update({'possible_moves': [y for y in x['possible_moves'] if y in attacker_squares]})
+                x.update({'possible_move_square':available_moves_rect(x['possible_moves'])})
 
-        # print(can_be_defended)
-        
-    if attackers != []:
-        if king['possible_moves'] == [] and can_be_defended == False:
-            print('CHECKMATE')
+        return defenders
