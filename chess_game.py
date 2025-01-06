@@ -95,7 +95,7 @@ def select_piece():
 
 
                         if 'king' in selected_piece['name']:
-                            if selected_piece['first_move'] == True:
+                            if selected_piece['first_move'] == True and king['check'] != True:
                                 selected_square = pygame.Vector2(y.x/100,y.y/100)
                                 castle_squares = [pygame.Vector2(3,y.y/100),pygame.Vector2(7,y.y/100)]
                                 if selected_square in castle_squares:
@@ -203,8 +203,6 @@ def select_piece():
         is_check(turn_manager,pieces_init.pieces)
         pieces_init.create_possible_moves()
         
-
-        
 def checkmate(piece_dict,turn_manager):
     turn = {
         1 : 'w',
@@ -233,7 +231,7 @@ def checkmate(piece_dict,turn_manager):
 
 def smooth_movement(start_pos,end_pos,piece,step=30):
     start_x = start_pos.x
-    start_y = start_pos.y 
+    start_y = start_pos.y
 
     end_x = end_pos.x + 10
     end_y = end_pos.y + 10
@@ -241,7 +239,7 @@ def smooth_movement(start_pos,end_pos,piece,step=30):
     difference_x = (end_x - start_x) / step
     difference_y = (end_y - start_y) / step
 
-    for i in range(step + 1):
+    for i in range(step):
         start_x += difference_x
         start_y += difference_y
 
